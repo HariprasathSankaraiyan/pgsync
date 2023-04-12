@@ -1332,7 +1332,8 @@ class Sync(Base, metaclass=Singleton):
             f"{now()}: {label} {self.database}:{self.index} "
             f"Xlog: [{self.count['xlog']:,}] => "
             f"Db: [{self.count['db']:,}] => "
-            f"Redis: [{self.redis.qsize:,}] => "
+            f"Redis: [total = {self.count['redis']:,} "
+            f"pending = {self.redis.qsize:,}] => "
             f"{self.search_client.name}: [{self.search_client.doc_count:,}]"
             f"...\n"
         )
