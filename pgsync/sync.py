@@ -475,11 +475,13 @@ class Sync(Base, metaclass=Singleton):
                             payload.tg_op != payload2.tg_op
                             or payload.table != payload2.table
                         ):
+                            logger.debug(f"logical_slot_changes: elastic bulking payloads {payloads} (partial tx: {payload} vs. {payload2})")
                             self.search_client.bulk(
                                 self.index, self._payloads(payloads)
                             )
                             payloads: list = []
                     elif j == len(rows):
+                        logger.debug(f"logical_slot_changes: elastic bulking payloads {payloads} (full tx)")
                         self.search_client.bulk(
                             self.index, self._payloads(payloads)
                         )
@@ -1129,6 +1131,31 @@ class Sync(Base, metaclass=Singleton):
         """Consumer which polls Redis continuously."""
         while True:
             await self._async_poll_redis()
+
+    @exception
+    def is_event_with_empty_ids(self, event: dict) -> bool:
+        """
+        expects an event payload from postgres notification queue
+        that has two keys: 'new' and 'old':
+
+        Payload(
+            ...
+            old={'id': 1, 'foreign_id': 2},
+            new={'id': 4, 'foreign_id': 3},
+        ),
+
+        returns True if both 'new' and 'old' are there
+                and have non None values
+        """
+        new = event['new']
+        old = event['old']
+
+        if old and None in old.values():
+            return True
+        if new and None in new.values():
+            return True
+
+        return False
 
     @threaded
     @exception
