@@ -475,13 +475,11 @@ class Sync(Base, metaclass=Singleton):
                             payload.tg_op != payload2.tg_op
                             or payload.table != payload2.table
                         ):
-                            logger.debug(f"logical_slot_changes: elastic bulking payloads {payloads} (partial tx: {payload} vs. {payload2})")
                             self.search_client.bulk(
                                 self.index, self._payloads(payloads)
                             )
                             payloads: list = []
                     elif j == len(rows):
-                        logger.debug(f"logical_slot_changes: elastic bulking payloads {payloads} (full tx)")
                         self.search_client.bulk(
                             self.index, self._payloads(payloads)
                         )
